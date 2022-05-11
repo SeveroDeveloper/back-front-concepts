@@ -1,5 +1,5 @@
 const express = require('express');
-const { uuid } = require('uuidv4');
+const { uuid, isUuid } = require('uuidv4');
 
 const app = express();
 
@@ -8,11 +8,37 @@ app.use(express.json());
 
 const projects = [];
 
+function logRequests(req, res, next)
+{
+  const { method, url } = req;
+  const logLabel = `[${method.toUpperCase()}] ${url}`;
+  console.log(logLabel);
+  // calls the next middleware (the route)
+  return next();
+}
+
+function validateProjectId(req, res, next)
+{
+  const { id } = req.params;
+
+  if(!isUuid(id))
+  {
+    return res.status(400).json({error : 'Invalid project ID.'});
+  }
+
+  return next();
+}
+
+app.use(logRequests);
+
 // the get function receives two params: the path of the url and a funtion
 // the function bellow have two params: req to keep request information and res to send the response
 app.get('/hello', (req, res) => {
   return res.json({message: 'Weee Hello World', path: req.path, get: '/projects'});
 });
+
+// we can also use middlewares in specific routes like this:
+//app.get('/projects', logRequests, (req, res) => {
 
 app.get('/projects', (req, res) => {
   // here we got the destructured query params
@@ -37,7 +63,7 @@ app.post('/projects', (req, res) => {
   return res.json(project);
 });
 
-app.put('/projects/:id', (req, res) => {
+app.put('/projects/:id', validateProjectId, (req, res) => {
 
   const { id } = req.params;
   const { title, owner } = req.body;
@@ -56,7 +82,7 @@ app.put('/projects/:id', (req, res) => {
   return res.json(project);
 });
 
-app.delete('/projects/:id', (req, res) => {
+app.delete('/projects/:id', validateProjectId, (req, res) => {
 
   const { id } = req.params;
 
