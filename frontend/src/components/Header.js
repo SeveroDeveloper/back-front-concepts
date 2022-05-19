@@ -1,11 +1,12 @@
 import React from 'react';
 
-export default function Header() {
+export default function Header( { title, children }) {
   return (
     <header>
       <h1>
-        Weely
+        {title}
       </h1>
+      {children}
     </header>
   );
 }
